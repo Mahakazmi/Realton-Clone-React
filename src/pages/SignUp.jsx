@@ -2,6 +2,11 @@ import React from 'react'
 import { useState } from "react"
 import { AiFillEyeInvisible, AiFillEye,FcGoogle } from "react-icons/ai";
 import OAuth from '../components/OAuth';
+import { getAuth,createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import {db} from "../Firebase"
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router';
+import {toast } from 'react-toastify';
 
 export default function SignUp() {
   // creating hook
@@ -13,9 +18,43 @@ export default function SignUp() {
       password: "",
     });
   const {name, email, password } = formData;
+
+  const Navigate= useNavigate();
+
   function onChange(e) {
     setFormData((prevState) => ({ ...prevState, [e.target.id]: e.target.value }))
   }
+
+async function onSubmit(e){
+      e.preventDefault()
+
+      try {
+        const auth= getAuth()
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+        // to display name of the user
+        updateProfile(auth.currentUser,{
+          displayName: name
+        })
+
+        const user = userCredential.user;
+        const formDataCopy ={...formData}
+        delete formDataCopy.password;
+        formDataCopy.timestamp= serverTimestamp();
+
+        //  saves all the info into firestore database
+        await setDoc(doc(db,"users",user.uid),formDataCopy)
+
+        toast.success("Registration Completed.")
+        // so when we click on the signup button, it navigates us to the home page
+        Navigate("/")
+
+      } catch (error) {
+       toast.error("Something went wrong with the registration")
+      }
+}
+
+
+
   return (
     <div>
       <section>
@@ -26,7 +65,7 @@ export default function SignUp() {
           <img src="https://media.istockphoto.com/id/1368151370/photo/user-typing-login-and-password-cyber-security-concept.jpg?b=1&s=170667a&w=0&k=20&c=wm6YUMs03Bup4_9XcQaX61L711qJxAUExEJp_PWO8gI=" alt="signIn" className='rounded-xl w-full' />
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-15 sm:top-12'>
-          <form action="">
+          <form action="" onSubmit={onSubmit}>
           <input className='w-full border-2 border-gray-500 px-2 py-2 bg-white text-xl rounded my-8' type="text" placeholder='Full Name' name="" id="name" value={name} onChange={onChange} />
             <input className='w-full border-2 border-gray-500 px-2 py-2 bg-white text-xl rounded' type="email" placeholder='Email Address' name="" id="email" value={email} onChange={onChange} />
             <div className='relative'>
