@@ -2,8 +2,28 @@ import React from 'react'
 import { useState } from "react"
 import { AiFillEyeInvisible, AiFillEye,FcGoogle } from "react-icons/ai";
 import OAuth from '../components/OAuth';
+import { signInWithEmailAndPassword,getAuth } from 'firebase/auth';
+import { Toast } from 'react-toastify';
+import { async } from '@firebase/util';
+import { toast } from 'react-toastify';
+import { Navigate, useNavigate } from 'react-router';
 
 export default function SignIn() {
+  const Navigate= useNavigate();
+  async function onSubmit(e)
+  {
+    e.preventDefault()
+    try {
+       const auth= getAuth()
+       const userCredential= await signInWithEmailAndPassword(auth,email,password)
+       if(userCredential.user)
+       {
+        Navigate("/")
+       }
+    } catch (error) {
+      toast.error("Wrong credentials")
+    }
+  }
   // creating hook
   const [showPassword, setShowPassword] = useState(false); //bec we don't wanna show pass in the beginning, as default
   const [formData, setFormData] = useState(
@@ -25,7 +45,7 @@ export default function SignIn() {
           <img src="https://media.istockphoto.com/id/1368151370/photo/user-typing-login-and-password-cyber-security-concept.jpg?b=1&s=170667a&w=0&k=20&c=wm6YUMs03Bup4_9XcQaX61L711qJxAUExEJp_PWO8gI=" alt="signIn" className='rounded-xl w-full' />
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-15 sm:top-12'>
-          <form action="">
+          <form onSubmit={onSubmit}>
             <input className='w-full border-2 border-gray-500 px-2 py-2 bg-white text-xl rounded' type="email" placeholder='Email Address' name="" id="email" value={email} onChange={onChange} />
             <div className='relative'>
               <input className='w-full border-2 border-gray-500 px-2 py-2 my-8 bg-white text-xl rounded'
